@@ -27,5 +27,11 @@
 <li>在构造函数中设置set_time_limit可以使超时时间延长使其下载更大文件</li>
 <li>程序使用了fsockopen,如果你的服务器禁用了,你可以改为curl获取文件大小,这很简单.</li>
 </ol>
+
+<h2>联系</h2>
+<ul>
+<li>我的博客 <a href="http://blog.suconghou.cn">http://blog.suconghou.cn</a></li>
+<li>邮箱 suconghou@126.com</li>
+</ul>
 </body>
 </html>
