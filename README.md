@@ -1,7 +1,7 @@
-<!DOCTYPE html>
+
 <html>
 <head>
-	<title>PHP带进度条实时下载</title>
+	<h1>PHP带进度条实时下载</h1>
 </head>
 <body>
 <h2>文件说明</h2>
