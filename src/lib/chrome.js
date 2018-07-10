@@ -75,7 +75,7 @@ export default {
 						await page.setViewport(viewPort);
 						await page.goto(u, gotoOps);
 						const img = await page.screenshot(imgOps);
-						response.writeHead(200, { 'Content-Type': 'image/png' });
+						response.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public,max-age=3600' });
 						response.end(img);
 						await page.close();
 						resolve(true);
@@ -123,7 +123,7 @@ export default {
 						await page.setViewport(viewPort);
 						await page.goto(u, gotoOps);
 						const img = await page.screenshot(imgOps);
-						response.writeHead(200, { 'Content-Type': 'image/jpeg' });
+						response.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public,max-age=3600' });
 						response.end(img);
 						await page.close();
 						resolve(true);
@@ -174,7 +174,7 @@ export default {
 						await page.emulateMedia('screen');
 						await page.goto(u, gotoOps);
 						const pdf = await page.pdf(pdfOps);
-						const headers = { 'Content-Type': 'application/pdf' };
+						const headers = { 'Content-Type': 'application/pdf', 'Cache-Control': 'public,max-age=3600' };
 						if (query.name) {
 							headers['Content-Disposition'] = `attachment; filename=${encodeURIComponent(query.name)}`;
 						}
