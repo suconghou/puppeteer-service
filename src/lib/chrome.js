@@ -3,8 +3,10 @@ import utiljs from './utiljs.js';
 
 const maxWidth = 5000;
 const launchOps = {
+	args: ['--no-sandbox', '--disable-setuid-sandbox'],
 	ignoreHTTPSErrors: true,
-	executablePath: '/tmp/chrome-mac/Chromium.app/Contents/MacOS/Chromium'
+	executablePath: '/chrome-linux/chrome'
+	// executablePath: '/tmp/chrome-mac/Chromium.app/Contents/MacOS/Chromium'
 };
 
 const browsers = {
