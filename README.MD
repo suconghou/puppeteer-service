@@ -14,7 +14,7 @@
 
 **pdf**
 
-> domcontentloaded 可选值 0,1 默认 0,设置为 1 即不等待所有资源都下载完毕就生成 pdf
+> wait,可选值 domcontentloaded,load,networkidle2,networkidle0 默认值 load
 >
 > format 可选值 A0,A1,A2,A3,A4,A5,A6 默认值 A4
 >
@@ -26,7 +26,7 @@
 
 **png**
 
-> domcontentloaded 可选值 0,1 默认 0,设置为 1 即不等待所有资源都下载完毕就生成 png
+> wait,可选值 domcontentloaded,load,networkidle2,networkidle0 默认值 load
 >
 > w 宽度,像素单位,必须为整数,默认 1280,最大不超过 5000
 >
@@ -36,7 +36,7 @@
 
 **jpg**
 
-> domcontentloaded 可选值 0,1 默认 0,设置为 1 即不等待所有资源都下载完毕就生成 jpg
+> wait,可选值 domcontentloaded,load,networkidle2,networkidle0 默认值 load
 >
 > w 宽度,像素单位,必须为整数,默认 1280,最大不超过 5000
 >

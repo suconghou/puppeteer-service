@@ -9,6 +9,8 @@ const launchOps = {
 	// executablePath: '/tmp/chrome-mac/Chromium.app/Contents/MacOS/Chromium'
 };
 
+const waits = ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'];
+
 const browsers = {
 	used: 0,
 	maxUsed: 100,
@@ -65,8 +67,8 @@ export default {
 							imgOps.fullPage = true;
 						}
 						const gotoOps = { timeout: 10e3 };
-						if (query.domcontentloaded) {
-							gotoOps.waitUntil = 'domcontentloaded';
+						if (waits.includes(query.wait)) {
+							gotoOps.waitUntil = query.wait;
 						}
 						const browser = await this.launch();
 						const page = await browser.newPage();
@@ -113,8 +115,8 @@ export default {
 							imgOps.fullPage = true;
 						}
 						const gotoOps = { timeout: 10e3 };
-						if (query.domcontentloaded) {
-							gotoOps.waitUntil = 'domcontentloaded';
+						if (waits.includes(query.wait)) {
+							gotoOps.waitUntil = query.wait;
 						}
 						const browser = await this.launch();
 						const page = await browser.newPage();
@@ -164,8 +166,8 @@ export default {
 							pdfOps.margin = { top: parseInt(top), right: parseInt(right), bottom: parseInt(bottom), left: parseInt(left) };
 						}
 						const gotoOps = { timeout: 10e3 };
-						if (query.domcontentloaded) {
-							gotoOps.waitUntil = 'domcontentloaded';
+						if (waits.includes(query.wait)) {
+							gotoOps.waitUntil = query.wait;
 						}
 						const browser = await this.launch();
 						const page = await browser.newPage();
