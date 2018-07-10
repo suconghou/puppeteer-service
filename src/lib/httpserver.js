@@ -2,17 +2,24 @@ import http from 'http';
 import querystring from 'querystring';
 import fs from 'fs';
 import path from 'path';
+import process from 'process';
 import route from './route.js';
 import sendFile from './sendfile.js';
 import utiljs from './utiljs.js';
 import utilnode from './utilnode.js';
 
 const index = 'index.html';
+const defaultPort = 9090;
 
 export default class httpserver {
-	constructor(port, cwd) {
-		this.port = port;
-		this.root = cwd;
+	constructor(args) {
+		const params = utiljs.getParams(args);
+		this.root = params.root || process.cwd();
+		this.port = params.port || defaultPort;
+		if (!(this.port > 1 && this.port < 65535)) {
+			console.error('port %s error,should be 1-65535', this.port);
+			process.exit(1);
+		}
 		this.server = http.createServer((request, response) => {
 			try {
 				const router = route.getRouter(request.method);

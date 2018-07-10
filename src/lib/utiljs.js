@@ -14,8 +14,7 @@ export default {
 		const kMap = {
 			'-p': 'port',
 			'-d': 'root',
-			'--debug': 'debug',
-			'--clean': 'clean'
+			'--debug': 'debug'
 		};
 		const ret = {};
 		const keys = Object.keys(kMap);
