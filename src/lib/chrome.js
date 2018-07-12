@@ -72,13 +72,18 @@ export default {
 						}
 						const browser = await this.launch();
 						const page = await browser.newPage();
-						await page.setViewport(viewPort);
-						await page.goto(u, gotoOps);
-						const img = await page.screenshot(imgOps);
-						response.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public,max-age=3600' });
-						response.end(img);
-						await page.close();
-						resolve(true);
+						try {
+							await page.setViewport(viewPort);
+							await page.goto(u, gotoOps);
+							const img = await page.screenshot(imgOps);
+							response.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public,max-age=3600' });
+							response.end(img);
+							await page.close();
+							resolve(true);
+						} catch (e) {
+							await page.close();
+							reject(e);
+						}
 					} catch (e) {
 						reject(e);
 					}
@@ -120,13 +125,18 @@ export default {
 						}
 						const browser = await this.launch();
 						const page = await browser.newPage();
-						await page.setViewport(viewPort);
-						await page.goto(u, gotoOps);
-						const img = await page.screenshot(imgOps);
-						response.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public,max-age=3600' });
-						response.end(img);
-						await page.close();
-						resolve(true);
+						try {
+							await page.setViewport(viewPort);
+							await page.goto(u, gotoOps);
+							const img = await page.screenshot(imgOps);
+							response.writeHead(200, { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public,max-age=3600' });
+							response.end(img);
+							await page.close();
+							resolve(true);
+						} catch (e) {
+							await page.close();
+							reject(e);
+						}
 					} catch (e) {
 						reject(e);
 					}
@@ -171,17 +181,22 @@ export default {
 						}
 						const browser = await this.launch();
 						const page = await browser.newPage();
-						await page.emulateMedia('screen');
-						await page.goto(u, gotoOps);
-						const pdf = await page.pdf(pdfOps);
-						const headers = { 'Content-Type': 'application/pdf', 'Cache-Control': 'public,max-age=3600' };
-						if (query.name) {
-							headers['Content-Disposition'] = `attachment; filename=${encodeURIComponent(query.name)}`;
+						try {
+							await page.emulateMedia('screen');
+							await page.goto(u, gotoOps);
+							const pdf = await page.pdf(pdfOps);
+							const headers = { 'Content-Type': 'application/pdf', 'Cache-Control': 'public,max-age=3600' };
+							if (query.name) {
+								headers['Content-Disposition'] = `attachment; filename=${encodeURIComponent(query.name)}`;
+							}
+							response.writeHead(200, headers);
+							response.end(pdf);
+							await page.close();
+							resolve(true);
+						} catch (e) {
+							await page.close();
+							reject(e);
 						}
-						response.writeHead(200, headers);
-						response.end(pdf);
-						await page.close();
-						resolve(true);
 					} catch (e) {
 						reject(e);
 					}
