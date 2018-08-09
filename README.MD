@@ -43,3 +43,21 @@
 > h 高度,像素单位,必须为整数,默认 800,最大不超过 5000
 >
 > fullPage 是否全屏,接受 0 或者 1
+
+## 其他说明
+
+-   每次开启的 browsers 实例在 2 分钟内没有被再次使用,将被回收
+-   每个 browsers 实例在使用 100 次后将自动销毁,然后产生新的
+-   图片和 pdf 响应带有 1 小时 http 缓存,有时你可能需要强制刷新
+
+## RUN IN DOCKER
+
+```bash
+docker run --name ssr -d \
+-p 9090:9090 \
+--restart always \
+-m 600m \
+--memory-swap=800m \
+--shm-size=800m \
+suconghou/puppeteer:service
+```
