@@ -7,7 +7,7 @@ chmod +x /usr/local/bin/dumb-init
 WORKDIR /src
 ADD ssr /src/
 RUN PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn add puppeteer && yarn cache clean
-CMD ["dumb-init","ssr"]
+CMD ["dumb-init","/src/ssr"]
 EXPOSE 9090
 
 
