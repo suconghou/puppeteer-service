@@ -1,15 +1,13 @@
-FROM suconghou/node:yarn AS build
-
-FROM suconghou/puppeteer
+FROM suconghou/node:yarn
 LABEL maintainer="suconghou@gmail.com"
-RUN mkdir -p /opt/yarn/ /src/
-COPY --from=build /usr/local/bin/node /usr/local/bin/node
-COPY --from=build /opt/yarn /opt/yarn
-RUN ln -s /opt/yarn/bin/yarn /usr/local/bin/yarn && ln -s /opt/yarn/bin/yarnpkg /usr/local/bin/yarnpkg
+ADD https://github.com/Yelp/dumb-init/releases/download/v1.2.2/dumb-init_1.2.2_amd64 /usr/local/bin/dumb-init
+RUN mkdir -p /src/ && apk update && apk upgrade && \
+apk add --no-cache chromium && \
+chmod +x /usr/local/bin/dumb-init
 WORKDIR /src
-ADD bundle.js /src/
+ADD ssr /src/
 RUN PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn add puppeteer && yarn cache clean
-CMD ["node","bundle.js"]
+CMD ["dumb-init","ssr"]
 EXPOSE 9090
 
 

@@ -5,7 +5,7 @@ const maxWidth = 5000;
 const launchOps = {
 	args: ['--no-sandbox', '--disable-setuid-sandbox'],
 	ignoreHTTPSErrors: true,
-	executablePath: '/chrome-linux/chrome'
+	executablePath: '/usr/bin/chromium-browser'
 	// executablePath: '/tmp/chrome-mac/Chromium.app/Contents/MacOS/Chromium'
 };
 

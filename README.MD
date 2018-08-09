@@ -52,6 +52,8 @@
 
 ## RUN IN DOCKER
 
+https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-on-alpine
+
 ```bash
 docker run --name ssr -d \
 -p 9090:9090 \
@@ -60,4 +62,8 @@ docker run --name ssr -d \
 --memory-swap=800m \
 --shm-size=800m \
 suconghou/puppeteer:service
+```
+
+```
+echo '#!/usr/bin/env node' | cat - bundle.js > ssr && chmod +x ssr
 ```
