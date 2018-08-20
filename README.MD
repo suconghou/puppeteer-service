@@ -52,17 +52,40 @@
 
 ## RUN IN DOCKER
 
+*僵尸进程*
+
+使用`dumb-init`防止僵尸进程
+
+见 https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-puppeteer-in-docker
+
+
 https://github.com/GoogleChrome/puppeteer/blob/master/docs/troubleshooting.md#running-on-alpine
 
 ```bash
 docker run --name ssr -d \
 -p 9090:9090 \
 --restart always \
--m 600m \
---memory-swap=800m \
---shm-size=800m \
+-m 512m \
+--memory-swap=512m \
+--shm-size=512m \
 suconghou/puppeteer:service
 ```
+
+## 关于中文支持
+
+默认安装的`Chromium` 不支持中文
+
+https://www.google.com/get/noto/help/cjk/
+
+https://github.com/googlei18n/noto-cjk
+
+
+支持英文,日文,简体中文
+
+支持 emoji
+
+若要添加更多支持,可以自定义.
+
 
 ```
 echo '#!/usr/bin/env node' | cat - bundle.js > ssr && chmod +x ssr
