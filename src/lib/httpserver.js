@@ -39,7 +39,7 @@ export default class httpserver {
 						const regRouter = route.getRegxpRouter(request.method, pathinfo);
 						if (regRouter) {
 							return regRouter
-								.handler(response, regRouter.matches, query, this.root)
+								.handler(request, response, regRouter.matches, query, this.root)
 								.then(res => {
 									if (!res) {
 										this.tryfile(response, pathinfo);

@@ -1,10 +1,10 @@
 import chrome from './chrome.js';
 const POST = {
-	reload(request, response, args, query) {}
+	reload(request, response, args, query) { }
 };
 
 const GET = {
-	reload(request, response, args, query) {}
+	reload(request, response, args, query) { }
 };
 
 const routers = {
@@ -24,11 +24,19 @@ const regxpPath = [
 	{
 		reg: /^\/pdf\/([\w\-=/]+)\.pdf$/,
 		handler: chrome.pagePdf.bind(chrome)
-	}
+	},
 ];
 
+const regxpPostPath = [
+	{
+		reg: /^\/(png|jpg|pdf)\/screenshot\/?$/,
+		handler: chrome.screenshotPage.bind(chrome)
+	}
+]
+
 const regRouters = {
-	GET: regxpPath
+	GET: regxpPath,
+	POST: regxpPostPath,
 };
 
 export default {
