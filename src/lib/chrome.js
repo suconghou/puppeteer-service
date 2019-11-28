@@ -1,6 +1,5 @@
 import utilnode from './utilnode.js';
-import utiljs from './utiljs.js';
-import marker from './marker.js'
+import utiljs, { waitUntil } from './utiljs.js';
 
 const maxWidth = 5000;
 const launchOps = {
@@ -14,47 +13,72 @@ const waits = ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'];
 
 const browsers = {
 	using: 0,
-	maxusing: 50,
+	maxusing: 200,
 	timer: 0,
-	maxIdleTime: 20e3
+	maxIdleTime: 120e3
 };
 
 export default {
 	async launch() {
-		clearTimeout(browsers.timer);
-		browsers.timer = setTimeout(() => {
-			if (browsers.chrome) {
-				// 一段时间限制后,触发自动清理
-				browsers.chrome.close();
-				browsers.chrome = null
-			}
-		}, browsers.maxIdleTime);
 		if (browsers.chrome) {
 			browsers.using++;
+			const c = browsers.chrome
+			clearTimeout(c.timer)
+			c.timer = setTimeout(async () => {
+				try {
+					await c.close()
+				} catch (e) { }
+			}, browsers.maxIdleTime)
 			if (browsers.using < browsers.maxusing) {
 				return browsers.chrome;
 			}
+
 			// 达到最大使用次数时,可能还有若干个标签在进行,我们需要等他们完成后在销毁
-			await browsers.chrome.close()
+			setTimeout(async () => {
+				try {
+					await c.close()
+				} catch (e) { }
+			}, 15000)
 		}
+		if (browsers.creating) {
+			return this.waitfor();
+		}
+		browsers.creating = true
 		const puppeteer = require('puppeteer-core');
 		const browser = await puppeteer.launch(launchOps);
 		browser.on('disconnected', () => {
 			browsers.chrome = null;
 			browsers.using = 0;
 		});
-		console.info("clear new")
 		browsers.chrome = browser;
+		browsers.using = 0
+		browsers.creating = false
+		browser.timer = setTimeout(() => {
+			if (!browser.timer.isclosed) {
+				browser.timer.isclosed = true
+				browser.timer.close()
+			}
+		}, browsers.maxIdleTime)
 		return browser;
+	},
+
+	async waitfor() {
+		return waitUntil(() => {
+			if (browsers.chrome && browsers.using < browsers.maxusing) {
+				return true
+			}
+		}, () => {
+			return browsers.chrome
+		}, err => {
+			return null
+		}, 100, 50)
 	},
 
 	async run(task) {
 		const browser = await this.launch();
 		const openPages = await browser.pages();
 		let page;
-		console.info(openPages.length)
-		for (let i in openPages) {
-			const item = openPages[i]
+		for (let item of openPages) {
 			if (!item.running) {
 				page = item
 				page.running = true
@@ -63,14 +87,16 @@ export default {
 		}
 		if (!page) {
 			page = await browser.newPage();
-			page.using = 0
 			page.running = true
 		}
-		page.using++
+		if (!page.using) {
+			page.using = 1
+		} else {
+			page.using++
+		}
 		await task(page)
 		if (page.using > 10) {
 			await page.close()
-			console.info("page closed")
 		} else {
 			await page.goto('about:blank')
 		}
