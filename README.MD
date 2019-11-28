@@ -20,11 +20,19 @@ GET `/jpg/url的base64.jpg`
 
 POST `/pdf/screenshot` `/png/screenshot` `/jpg/screenshot`
 
-参数
-```json
+http body 里发送要渲染的html
+
+query 参数, 与下列说明相同
+
+建议流程为:
+
+前端请求 -> 后端查找缓存 -> 有缓存直接返回,无缓存进行渲染 -> 
+
+后端render template as string -> http post template string to `/pdf/screenshot` -> 保存pdf,并缓存 
+
+-> 返回给前端
 
 
-```
 
 
 ### 参数
