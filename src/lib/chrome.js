@@ -110,12 +110,16 @@ export default {
 			return Promise.resolve(false);
 		}
 
-		const { viewPort, imgOps, gotoOps } = this.opts(query)
+		const { viewPort, imgOps, gotoOps, selector } = this.opts(query)
 
 		return this.run(async (page) => {
 			await page.setViewport(viewPort);
 			await page.goto(u, gotoOps);
-			const img = await page.screenshot(imgOps);
+			let div = page;
+			if (selector) {
+				div = await page.$(selector);
+			}
+			const img = await div.screenshot(imgOps);
 			const headers = { 'Content-Type': 'image/png', 'Cache-Control': 'public,max-age=3600' };
 			if (query.name) {
 				headers['Content-Disposition'] = `attachment; filename* = UTF-8''${encodeURIComponent(query.name)}`;
@@ -129,12 +133,16 @@ export default {
 		if (!utiljs.isUrl(u)) {
 			return Promise.resolve(false);
 		}
-		const { viewPort, imgOps, gotoOps } = this.opts(query)
+		const { viewPort, imgOps, gotoOps, selector } = this.opts(query)
 
 		return this.run(async (page) => {
 			await page.setViewport(viewPort);
 			await page.goto(u, gotoOps);
-			const img = await page.screenshot(imgOps);
+			let div = page;
+			if (selector) {
+				div = await page.$(selector);
+			}
+			const img = await div.screenshot(imgOps);
 			const headers = { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public,max-age=3600' };
 			if (query.name) {
 				headers['Content-Disposition'] = `attachment; filename* = UTF-8''${encodeURIComponent(query.name)}`;
@@ -149,11 +157,15 @@ export default {
 		if (!utiljs.isUrl(u)) {
 			return Promise.resolve(false);
 		}
-		const { pdfOps, gotoOps } = this.opts(query)
+		const { pdfOps, gotoOps, selector } = this.opts(query)
 
 		return this.run(async (page) => {
 			await page.goto(u, gotoOps);
-			const pdf = await page.pdf(pdfOps);
+			let div = page;
+			if (selector) {
+				div = await page.$(selector);
+			}
+			const pdf = await div.pdf(pdfOps);
 			const headers = { 'Content-Type': 'application/pdf', 'Cache-Control': 'public,max-age=3600' };
 			if (query.name) {
 				headers['Content-Disposition'] = `attachment; filename* = UTF-8''${encodeURIComponent(query.name)}`;
@@ -230,11 +242,16 @@ export default {
 			pdfOps.margin = { top: parseInt(top), right: parseInt(right), bottom: parseInt(bottom), left: parseInt(left) };
 		}
 
+		let selector;
+		if (query.query) {
+			selector = utilnode.base64Decode(query.query)
+		}
 		return {
 			viewPort,
 			gotoOps,
 			imgOps,
 			pdfOps,
+			selector,
 		}
 	}
 };

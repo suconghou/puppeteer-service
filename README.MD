@@ -58,6 +58,8 @@ networkidle2：在 500ms 内有不超过 2 个网络连接时就算成功
 >
 > margin 边距空白,整数,上右下左,以`,`号隔开,例: margin=10,20,0,20
 
+> query CSS选择器的base64值 , 默认截屏整个html, 传入选择器只截图指定区域
+
 
 ```
 Letter: 8.5in x 11in
@@ -83,6 +85,8 @@ A6: 4.13in x 5.83in
 >
 > fullPage 是否全屏,接受 0 或者 1,为1即为长截屏,高度为网页高度
 
+> query CSS选择器的base64值 , 默认截屏整个html, 传入选择器只截图指定区域
+
 **jpg**
 
 > wait,可选值 domcontentloaded,load,networkidle2,networkidle0 默认值 load
@@ -92,6 +96,9 @@ A6: 4.13in x 5.83in
 > h 高度,像素单位,必须为整数,默认 800,最大不超过 5000
 >
 > fullPage 是否全屏,接受 0 或者 1,为1即为长截屏,高度为网页高度
+
+> query CSS选择器的base64值 , 默认截屏整个html, 传入选择器只截图指定区域
+
 
 ## 其他说明
 
