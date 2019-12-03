@@ -157,15 +157,11 @@ export default {
 		if (!utiljs.isUrl(u)) {
 			return Promise.resolve(false);
 		}
-		const { pdfOps, gotoOps, selector } = this.opts(query)
+		const { pdfOps, gotoOps, } = this.opts(query)
 
 		return this.run(async (page) => {
 			await page.goto(u, gotoOps);
-			let div = page;
-			if (selector) {
-				div = await page.$(selector);
-			}
-			const pdf = await div.pdf(pdfOps);
+			const pdf = await page.pdf(pdfOps);
 			const headers = { 'Content-Type': 'application/pdf', 'Cache-Control': 'public,max-age=3600' };
 			if (query.name) {
 				headers['Content-Disposition'] = `attachment; filename* = UTF-8''${encodeURIComponent(query.name)}`;
