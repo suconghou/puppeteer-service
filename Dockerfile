@@ -4,7 +4,7 @@ RUN wget -O /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/
     chmod +x /usr/local/bin/dumb-init && \
     mkdir /app/ && \
     cd /app/ && \
-    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn add puppeteer-core --no-lockfile --ignore-optional --non-interactive && \
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1 yarn add puppeteer-core --production --no-lockfile --ignore-optional --non-interactive && \
     yarn cache clean
 WORKDIR /app
 ADD ssr /app/
