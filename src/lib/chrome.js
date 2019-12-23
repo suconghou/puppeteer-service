@@ -220,8 +220,13 @@ export default {
 		};
 		if (['Letter', 'Legal', 'Tabloid', 'Ledger', 'A0', 'A1', 'A2', 'A3', 'A4', 'A5', 'A6'].includes(query.format)) {
 			pdfOps.format = query.format;
-		} else if (w) {
-			pdfOps.width = w;
+		} else if (w || h) {
+			if (w) {
+				pdfOps.width = viewPort.width;
+			}
+			if (h) {
+				pdfOps.height = viewPort.height
+			}
 		} else {
 			pdfOps.format = 'A4';
 		}
