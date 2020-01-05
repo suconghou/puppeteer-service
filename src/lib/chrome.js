@@ -191,7 +191,64 @@ export default {
 			response.end(data);
 		})
 	},
+	async evaluate(request, response, matches, query, cwd) {
+		const body = await utilnode.body(request)
+		const v = JSON.parse(body.toString())
+		if (!v) {
+			throw new Error("invalid params")
+		}
+		const s = v.script ? v.script.trim() : '';
+		if (!s && !v.capture) {
+			throw new Error("invalid script")
+		}
+		const { gotoOps } = this.opts(query)
 
+		const inter = Array.isArray(v.intercept) && v.intercept.length && v.url;
+		return this.run(async (page) => {
+			const intered = v.intercept
+			const fn = (request) => {
+				if (intered.includes(request.resourceType())) {
+					request.respond({
+						status: 200,
+						body: ''
+					})
+				} else {
+					request.continue();
+				}
+			}
+			try {
+				if (inter) {
+					await page.setRequestInterception(true);
+					page.on('request', fn);
+				}
+				if (utiljs.isUrl(v.url)) {
+					if (v.capture) {
+						const timeout = 5e3;
+						page.goto(v.url, gotoOps)
+						const res = await page.waitForResponse(response => response.url().indexOf(v.capture) > -1, { timeout });
+						const buf = await res.text()
+						const headers = res.headers();
+						response.writeHead(res.status(), { 'Content-Type': headers['content-type'] });
+						return response.end(buf);
+					} else {
+						await page.goto(v.url, gotoOps);
+					}
+				}
+				const f = `(${s})()`
+				const res = await page.evaluate(f)
+				response.writeHead(200, { 'Content-Type': 'application/json', });
+				response.end(JSON.stringify(res));
+			} catch (e) {
+				response.writeHead(500, {});
+				response.end(e.message);
+			} finally {
+				if (inter) {
+					await page.setRequestInterception(false);
+					page.removeListener('request', fn)
+				}
+			}
+		})
+	},
 	opts(query) {
 		const viewPort = {
 			width: 1280,

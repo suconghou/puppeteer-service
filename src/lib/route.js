@@ -31,6 +31,10 @@ const regxpPostPath = [
 	{
 		reg: /^\/(png|jpg|pdf)\/screenshot\/?$/,
 		handler: chrome.screenshotPage.bind(chrome)
+	},
+	{
+		reg:/^\/page\/evaluate$/,
+		handler:chrome.evaluate.bind(chrome)
 	}
 ]
 
