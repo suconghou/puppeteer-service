@@ -1,10 +1,8 @@
 import chrome from './chrome.js';
 const POST = {
-	reload(request, response, args, query) { }
 };
 
 const GET = {
-	reload(request, response, args, query) { }
 };
 
 const routers = {
@@ -33,8 +31,8 @@ const regxpPostPath = [
 		handler: chrome.screenshotPage.bind(chrome)
 	},
 	{
-		reg:/^\/page\/evaluate$/,
-		handler:chrome.evaluate.bind(chrome)
+		reg: /^\/page\/evaluate$/,
+		handler: chrome.evaluate.bind(chrome)
 	}
 ]
 

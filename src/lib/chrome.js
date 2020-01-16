@@ -1,118 +1,134 @@
 import utilnode from './utilnode.js';
-import utiljs, { waitUntil } from './utiljs.js';
+import utiljs, { sleep } from './utiljs.js';
 
 const maxWidth = 5000;
+const maxPages = 20;
+const maxReuse = 10
+
 const launchOps = {
-	headless: true,
-	args: ['–disable-gpu', '–no-first-run', '–no-zygote', '–single-process', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+	headless: false,
+	args: ['-–disable-gpu', '-–no-first-run', '-–no-zygote', '--no-startup-widnow', '-–single-process', '--no-sandbox', '--disable-crash-reporter', '--disable-breakpad', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
 	ignoreHTTPSErrors: true,
-	executablePath: '/usr/bin/chromium-browser'
+	// executablePath: '/usr/bin/chromium-browser'
+	executablePath: '/tmp/chrome-mac/Chromium.app/Contents/MacOS/Chromium'
 };
 
 const waits = ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'];
 
 const browsers = {
-	using: 0,
-	maxusing: 200,
+	creating: false,
+	chrome: null,
 	timer: 0,
-	maxIdleTime: 120e3
+	time: 40e3,
 };
 
+
+
 export default {
+
+	/**
+	 * 拿到一个Broswer实例
+	 */
 	async launch() {
 		if (browsers.chrome) {
-			browsers.using++;
-			const c = browsers.chrome
-			clearTimeout(c.timer)
-			c.timer = setTimeout(async () => {
-				try {
-					await c.close()
-				} catch (e) { }
-			}, browsers.maxIdleTime)
-			if (browsers.using < browsers.maxusing) {
-				return browsers.chrome;
-			}
-
-			// 达到最大使用次数时,可能还有若干个标签在进行,我们需要等他们完成后在销毁
-			setTimeout(async () => {
-				try {
-					await c.close()
-				} catch (e) { }
-			}, 15000)
+			browsers.timer = +new Date()
+			return browsers.chrome
 		}
 		if (browsers.creating) {
-			return this.waitfor();
+			return await this.getBroswer();
 		}
 		browsers.creating = true
 		const puppeteer = require('puppeteer-core');
 		const browser = await puppeteer.launch(launchOps);
 		browser.on('disconnected', () => {
 			browsers.chrome = null;
-			browsers.using = 0;
+			browsers.creating = false
 		});
 		browsers.chrome = browser;
-		browsers.using = 0
+		browsers.timer = +new Date()
 		browsers.creating = false
-		browser.timer = setTimeout(() => {
-			if (!browser.timer.isclosed) {
-				browser.timer.isclosed = true
-				browser.timer.close()
-			}
-		}, browsers.maxIdleTime)
 		return browser;
 	},
 
-	async waitfor() {
-		return waitUntil(() => {
-			if (browsers.chrome && browsers.using < browsers.maxusing) {
-				return true
+	async getBroswer() {
+		let i = 0
+		while (i++ < 20) {
+			if (browsers.chrome) {
+				browsers.timer = +new Date()
+				return browsers.chrome
 			}
-		}, () => {
-			return browsers.chrome
-		}, err => {
-			return null
-		}, 100, 50)
+			await sleep(200)
+		}
+		throw new Error("getBroswer failed");
 	},
 
-	async run(task) {
-		const browser = await this.launch();
+	/**
+	 * 当前标签页中查找可用的标签页
+	 * 
+	 */
+	async getPage() {
+		const browser = await this.launch()
 		const openPages = await browser.pages();
-		let page;
 		for (let item of openPages) {
 			if (!item.running) {
-				page = item
-				page.running = true
-				break;
+				return item
 			}
 		}
-		if (!page) {
-			page = await browser.newPage();
-			page.running = true
+		const num = openPages.length
+		if (num < maxPages) {
+			return await browser.newPage();
 		}
+		let i = 0;
+		while (i++ < 10) {
+			await sleep(200);
+			for (let item of openPages) {
+				if (!item.running) {
+					return item
+				}
+			}
+		}
+		throw new Error("getPage failed")
+	},
+
+	/**
+	 * 拿到一个Page实例执行
+	 * @param {function} task 
+	 */
+	async run(task) {
+		const page = await this.getPage()
+		page.running = true
+		page.time = +new Date()
 		if (!page.using) {
 			page.using = 1
 		} else {
 			page.using++
 		}
-		await task(page)
-		if (page.using > 10) {
-			await page.close()
-		} else {
-			await page.goto('about:blank')
+		let err
+		try {
+			await task(page)
+		} catch (e) {
+			err = e
+			throw e
+		} finally {
+			if (page.using > maxReuse) {
+				await page.close()
+			} else {
+				await page.goto('about:blank')
+			}
+			page.running = false
+			if (!err) {
+				return true
+			}
 		}
-		page.running = false
-		return true
+
 	},
 
-	pagePng(request, response, matches, query, cwd) {
-		const u = utilnode.base64Decode(matches[1]);
-		if (!utiljs.isUrl(u)) {
-			return Promise.resolve(false);
-		}
 
+	async pagePng(request, response, matches, query, cwd) {
+		const u = this.getURL(matches[1])
 		const { viewPort, imgOps, gotoOps, selector } = this.opts(query)
 
-		return this.run(async (page) => {
+		return await this.run(async (page) => {
 			await page.setViewport(viewPort);
 			await page.goto(u, gotoOps);
 			let div = page;
@@ -128,14 +144,11 @@ export default {
 			response.end(img);
 		})
 	},
-	pageJpg(request, response, matches, query, cwd) {
-		const u = utilnode.base64Decode(matches[1]);
-		if (!utiljs.isUrl(u)) {
-			return Promise.resolve(false);
-		}
+	async pageJpg(request, response, matches, query, cwd) {
+		const u = this.getURL(matches[1])
 		const { viewPort, imgOps, gotoOps, selector } = this.opts(query)
 
-		return this.run(async (page) => {
+		return await this.run(async (page) => {
 			await page.setViewport(viewPort);
 			await page.goto(u, gotoOps);
 			let div = page;
@@ -152,14 +165,11 @@ export default {
 		});
 
 	},
-	pagePdf(request, response, matches, query, cwd) {
-		const u = utilnode.base64Decode(matches[1]);
-		if (!utiljs.isUrl(u)) {
-			return Promise.resolve(false);
-		}
+	async pagePdf(request, response, matches, query, cwd) {
+		const u = this.getURL(matches[1])
 		const { pdfOps, gotoOps, } = this.opts(query)
 
-		return this.run(async (page) => {
+		return await this.run(async (page) => {
 			await page.goto(u, gotoOps);
 			const pdf = await page.pdf(pdfOps);
 			const headers = { 'Content-Type': 'application/pdf', 'Cache-Control': 'public,max-age=3600' };
@@ -175,7 +185,7 @@ export default {
 		const { viewPort, imgOps, pdfOps, gotoOps } = this.opts(query)
 		const body = await utilnode.body(request)
 		const html = body.toString()
-		return this.run(async (page) => {
+		return await this.run(async (page) => {
 			await page.setContent(html, gotoOps)
 			const headers = { 'Cache-Control': 'public,max-age=3600' };
 			let data;
@@ -204,7 +214,7 @@ export default {
 		const { gotoOps } = this.opts(query)
 
 		const inter = Array.isArray(v.intercept) && v.intercept.length && v.url;
-		return this.run(async (page) => {
+		return await this.run(async (page) => {
 			const intered = v.intercept
 			const fn = (request) => {
 				if (intered.includes(request.resourceType())) {
@@ -249,6 +259,13 @@ export default {
 			}
 		})
 	},
+	getURL(encoded) {
+		const u = utilnode.base64Decode(encoded);
+		if (!utiljs.isUrl(u)) {
+			throw new Error("invalid url");
+		}
+		return u
+	},
 	opts(query) {
 		const viewPort = {
 			width: 1280,
@@ -267,7 +284,7 @@ export default {
 		if (query.fullPage) {
 			imgOps.fullPage = true;
 		}
-		const gotoOps = { timeout: 10e3 };
+		const gotoOps = { timeout: 1e3 };
 		if (waits.includes(query.wait)) {
 			gotoOps.waitUntil = query.wait;
 		}

@@ -47,7 +47,7 @@ export default class httpserver {
 								})
 								.catch(e => {
 									const err = e.toString();
-									console.error(err);
+									console.error(e);
 									this.err500(response, err);
 								});
 						} else {
