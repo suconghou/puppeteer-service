@@ -2,8 +2,7 @@ import utilnode from './utilnode.js';
 import utiljs, { sleep } from './utiljs.js';
 
 const maxWidth = 5000;
-const maxPages = 20;
-const maxReuse = 10
+const maxPages = 5;
 
 const launchOps = {
 	headless: false,
@@ -15,57 +14,41 @@ const launchOps = {
 
 const waits = ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'];
 
-const browsers = {
-	creating: false,
-	chrome: null,
-	timer: 0,
-	time: 40e3,
-};
+const timeout = async (t) => {
+	await sleep(t)
+	throw new Error("timeout")
+}
+
+class browsers {
 
 
+	constructor() {
+		this.browsers = []
+		this.loop()
+	}
 
-export default {
 
-	/**
-	 * 拿到一个Broswer实例
-	 */
+	loop() {
+		setTimeout(() => this.loop(), 5000)
+	}
+
 	async launch() {
-		if (browsers.chrome) {
-			browsers.timer = +new Date()
-			return browsers.chrome
+		for (let item of this.browsers) {
+			return item
 		}
-		if (browsers.creating) {
-			return await this.getBroswer();
-		}
-		browsers.creating = true
 		const puppeteer = require('puppeteer-core');
 		const browser = await puppeteer.launch(launchOps);
+		const t = +new Date()
+		browser.time = t
+		this.browsers.push(browser)
 		browser.on('disconnected', () => {
-			browsers.chrome = null;
-			browsers.creating = false
+			this.browsers = this.browsers.filter(item => {
+				return item && item.time !== t;
+			})
 		});
-		browsers.chrome = browser;
-		browsers.timer = +new Date()
-		browsers.creating = false
-		return browser;
-	},
+		return browser
+	}
 
-	async getBroswer() {
-		let i = 0
-		while (i++ < 20) {
-			if (browsers.chrome) {
-				browsers.timer = +new Date()
-				return browsers.chrome
-			}
-			await sleep(200)
-		}
-		throw new Error("getBroswer failed");
-	},
-
-	/**
-	 * 当前标签页中查找可用的标签页
-	 * 
-	 */
 	async getPage() {
 		const browser = await this.launch()
 		const openPages = await browser.pages();
@@ -76,10 +59,11 @@ export default {
 		}
 		const num = openPages.length
 		if (num < maxPages) {
+			// 最大限制仅为参考值,并发情况下可突破
 			return await browser.newPage();
 		}
 		let i = 0;
-		while (i++ < 10) {
+		while (i++ < 50) {
 			await sleep(200);
 			for (let item of openPages) {
 				if (!item.running) {
@@ -87,8 +71,9 @@ export default {
 				}
 			}
 		}
-		throw new Error("getPage failed")
-	},
+		throw new Error("getPage timeout")
+	}
+
 
 	/**
 	 * 拿到一个Page实例执行
@@ -98,31 +83,33 @@ export default {
 		const page = await this.getPage()
 		page.running = true
 		page.time = +new Date()
-		if (!page.using) {
-			page.using = 1
-		} else {
-			page.using++
-		}
-		let err
+		let err, res
 		try {
-			await task(page)
+			res = await Promise.race([task(page), timeout(3e3)])
 		} catch (e) {
 			err = e
 			throw e
 		} finally {
-			if (page.using > maxReuse) {
-				await page.close()
-			} else {
-				await page.goto('about:blank')
-			}
+			await page.goto('about:blank')
 			page.running = false
 			if (!err) {
-				return true
+				return res
 			}
 		}
+	}
 
+}
+
+
+const chrome = new browsers()
+
+
+
+export default {
+
+	run(task) {
+		return chrome.run(task)
 	},
-
 
 	async pagePng(request, response, matches, query, cwd) {
 		const u = this.getURL(matches[1])
@@ -131,11 +118,17 @@ export default {
 		return await this.run(async (page) => {
 			await page.setViewport(viewPort);
 			await page.goto(u, gotoOps);
+			if (response.headersSent || response.finished) {
+				return
+			}
 			let div = page;
 			if (selector) {
 				div = await page.$(selector);
 			}
 			const img = await div.screenshot(imgOps);
+			if (response.headersSent || response.finished) {
+				return
+			}
 			const headers = { 'Content-Type': 'image/png', 'Cache-Control': 'public,max-age=3600' };
 			if (query.name) {
 				headers['Content-Disposition'] = `attachment; filename* = UTF-8''${encodeURIComponent(query.name)}`;
@@ -151,11 +144,17 @@ export default {
 		return await this.run(async (page) => {
 			await page.setViewport(viewPort);
 			await page.goto(u, gotoOps);
+			if (response.headersSent || response.finished) {
+				return
+			}
 			let div = page;
 			if (selector) {
 				div = await page.$(selector);
 			}
 			const img = await div.screenshot(imgOps);
+			if (response.headersSent || response.finished) {
+				return
+			}
 			const headers = { 'Content-Type': 'image/jpeg', 'Cache-Control': 'public,max-age=3600' };
 			if (query.name) {
 				headers['Content-Disposition'] = `attachment; filename* = UTF-8''${encodeURIComponent(query.name)}`;
@@ -171,7 +170,13 @@ export default {
 
 		return await this.run(async (page) => {
 			await page.goto(u, gotoOps);
+			if (response.headersSent || response.finished) {
+				return
+			}
 			const pdf = await page.pdf(pdfOps);
+			if (response.headersSent || response.finished) {
+				return
+			}
 			const headers = { 'Content-Type': 'application/pdf', 'Cache-Control': 'public,max-age=3600' };
 			if (query.name) {
 				headers['Content-Disposition'] = `attachment; filename* = UTF-8''${encodeURIComponent(query.name)}`;
@@ -196,6 +201,9 @@ export default {
 			} else {
 				data = await page.pdf(pdfOps);
 				headers['Content-Type'] = 'application/pdf';
+			}
+			if (response.headersSent || response.finished) {
+				return
 			}
 			response.writeHead(200, headers);
 			response.end(data);
@@ -284,7 +292,7 @@ export default {
 		if (query.fullPage) {
 			imgOps.fullPage = true;
 		}
-		const gotoOps = { timeout: 1e3 };
+		const gotoOps = { timeout: 10e3 };
 		if (waits.includes(query.wait)) {
 			gotoOps.waitUntil = query.wait;
 		}

@@ -60,3 +60,19 @@ export const waitUntil = async (c, fun, fall = () => { }, dur = 50, maxTimes = 2
 	};
 	return await funwarp();
 };
+
+
+export const asyncTask = {
+	len: 0,
+	async run(f) {
+		try {
+			this.len++
+			return await f();
+		} finally {
+			this.len--
+		}
+	},
+	getLen() {
+		return this.len
+	}
+}

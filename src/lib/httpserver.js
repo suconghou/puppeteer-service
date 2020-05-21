@@ -41,7 +41,7 @@ export default class httpserver {
 							return regRouter
 								.handler(request, response, regRouter.matches, query, this.root)
 								.then(res => {
-									if (!res) {
+									if (res === false) {
 										this.tryfile(response, pathinfo);
 									}
 								})
@@ -76,17 +76,27 @@ export default class httpserver {
 			if (err) {
 				return this.err404(response);
 			}
-			sendFile(response, stat, file);
+			if (!response.headersSent) {
+				sendFile(response, stat, file);
+			}
 		});
 	}
 	err404(response) {
-		response.writeHead(404, { 'Content-Type': 'text/plain' });
-		response.end('Not Found\n');
+		if (!response.headersSent) {
+			response.writeHead(404, { 'Content-Type': 'text/plain' });
+		}
+		if (!response.finished) {
+			response.end('Not Found\n');
+		}
 	}
 
 	err500(response, err) {
-		response.writeHead(500, { 'Content-Type': 'text/plain' });
-		response.end(err + '\n');
+		if (!response.headersSent) {
+			response.writeHead(500, { 'Content-Type': 'text/plain' });
+		}
+		if (!response.finished) {
+			response.end(err + '\n');
+		}
 	}
 	noIndex(request, response, pathinfo, query) {
 		const file = path.join(this.root, index);
