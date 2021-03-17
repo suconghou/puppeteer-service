@@ -5,11 +5,10 @@ const maxWidth = 5000;
 const maxPages = 5;
 
 const launchOps = {
-	headless: false,
-	args: ['-–disable-gpu', '-–no-first-run', '-–no-zygote', '--no-startup-widnow', '-–single-process', '--no-sandbox', '--disable-crash-reporter', '--disable-breakpad', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+	headless: false,//typeof process.env.headless !== 'undefined' ? Boolean(process.env.headless) : true,
+	args: ['--disable-gpu', '--no-first-run', '--no-zygote', '--no-startup-widnow', '--single-process', '--no-sandbox', '--disable-crash-reporter', '--disable-breakpad', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
 	ignoreHTTPSErrors: true,
-	// executablePath: '/usr/bin/chromium-browser'
-	executablePath: '/tmp/chrome-mac/Chromium.app/Contents/MacOS/Chromium'
+	executablePath: process.env.executablePath ? process.env.executablePath : '/usr/bin/chromium-browser'
 };
 
 const waits = ['load', 'domcontentloaded', 'networkidle0', 'networkidle2'];
@@ -29,7 +28,30 @@ class browsers {
 
 
 	loop() {
-		setTimeout(() => this.loop(), 5000)
+		setTimeout(() => this.loop(), 15e3)
+		this.cleanup();
+	}
+
+	async cleanup() {
+		const t = +new Date()
+		for (let item of this.browsers) {
+			const openPages = await item.pages();
+			if (openPages.length == 0 && t - item.time > 30e3) {
+				await item.close()
+				return
+			}
+			for (let page of openPages) {
+				if (page.running) {
+					return
+				}
+			}
+			for (let page of openPages) {
+				if (t - page.time > 30e3) {
+					await page.close()
+					return
+				}
+			}
+		}
 	}
 
 	async launch() {
@@ -43,7 +65,7 @@ class browsers {
 		this.browsers.push(browser)
 		browser.on('disconnected', () => {
 			this.browsers = this.browsers.filter(item => {
-				return item && item.time !== t;
+				return item && item.isConnected() && item.time !== t;
 			})
 		});
 		return browser
@@ -59,7 +81,7 @@ class browsers {
 		}
 		const num = openPages.length
 		if (num < maxPages) {
-			// 最大限制仅为参考值,并发情况下可突破
+			// 因newPage调用是异步,最大限制仅为参考值,并发情况下可突破
 			return await browser.newPage();
 		}
 		let i = 0;
@@ -85,7 +107,7 @@ class browsers {
 		page.time = +new Date()
 		let err, res
 		try {
-			res = await Promise.race([task(page), timeout(3e3)])
+			res = await Promise.race([task(page), timeout(15e3)])
 		} catch (e) {
 			err = e
 			throw e
@@ -242,7 +264,7 @@ export default {
 				if (utiljs.isUrl(v.url)) {
 					if (v.capture) {
 						const timeout = 5e3;
-						page.goto(v.url, gotoOps)
+						await page.goto(v.url, gotoOps)
 						const res = await page.waitForResponse(response => response.url().indexOf(v.capture) > -1, { timeout });
 						const buf = await res.text()
 						const headers = res.headers();

@@ -100,6 +100,33 @@ A6: 4.13in x 5.83in
 > query CSS选择器的base64值 , 默认截屏整个html, 传入选择器只截图指定区域
 
 
+## 代码执行接口
+
+POST `/page/evaluate`
+
+```json
+{
+    "url": "https://some-url",
+    "intercept": [
+        "image",
+        "font",
+        "stylesheet"
+    ],
+    "capture": "lapi/live/getH5Play",
+    "script":""
+}
+```
+
+大致有两种模式,`capture`和`script`字段至少其一
+
+当capture有效时,会导航到指定url,抓取匹配的请求
+
+当`script`有效时,如果url有效,则导航到url,然后执行script.否则,空白页面下执行script
+
+`intercept`可配置拦截的资源,以提升页面加载速度
+
+
+
 ## 其他说明
 
 
@@ -115,8 +142,7 @@ Chrome实例缓存池
 
 
 
--   每次开启的 browsers 实例在 2 分钟内没有被再次使用,将被回收
--   每个 browsers 实例在使用 100 次后将自动销毁,然后产生新的
+-   每次开启的 browser 和 page 均会无活动时自动回收 
 -   图片和 pdf 响应带有 1 小时 http 缓存,有时你可能需要强制刷新
 
 **最大并发度限制**
@@ -147,3 +173,13 @@ suconghou/puppeteer:service
 ```
 echo '#!/usr/bin/env node' | cat - bundle.js > ssr && chmod +x ssr
 ```
+
+环境变量
+
+headless
+executablePath
+
+
+本地测试 
+
+export headless=0 executablePath='/tmp/chrome-mac/Chromium.app/Contents/MacOS/Chromium' && ./ssr
