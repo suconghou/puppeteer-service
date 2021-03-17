@@ -5,7 +5,7 @@ const maxWidth = 5000;
 const maxPages = 5;
 
 const launchOps = {
-	headless: false,//typeof process.env.headless !== 'undefined' ? Boolean(process.env.headless) : true,
+	headless: (typeof process.env.headless !== 'undefined') ? Boolean(Number(process.env.headless)) : true,
 	args: ['--disable-gpu', '--no-first-run', '--no-zygote', '--no-startup-widnow', '--single-process', '--no-sandbox', '--disable-crash-reporter', '--disable-breakpad', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
 	ignoreHTTPSErrors: true,
 	executablePath: process.env.executablePath ? process.env.executablePath : '/usr/bin/chromium-browser'
