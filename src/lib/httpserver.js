@@ -23,39 +23,38 @@ export default class httpserver {
 		this.server = http.createServer((request, response) => {
 			try {
 				const router = route.getRouter(request.method);
-				if (router) {
-					const [pathinfo, qs] = request.url.split('?');
-					const query = querystring.parse(qs);
-					const [fn, ...args] = pathinfo.split('/').filter(item => item);
-					if (!fn) {
-						return this.noIndex(request, response, pathinfo, query);
-					}
-					const m = router[fn];
-					if (utiljs.isFunction(m)) {
-						// 优先级1 预定义函数
-						return m(request, response, args, query);
-					} else {
-						// 优先级2 预处理文件 , 优先级3 静态文件
-						const regRouter = route.getRegxpRouter(request.method, pathinfo);
-						if (regRouter) {
-							return regRouter
-								.handler(request, response, regRouter.matches, query, this.root)
-								.then(res => {
-									if (res === false) {
-										this.tryfile(response, pathinfo);
-									}
-								})
-								.catch(e => {
-									const err = e.toString();
-									console.error(e);
-									this.err500(response, err);
-								});
-						} else {
-							return this.tryfile(response, pathinfo);
-						}
-					}
+				if (!router) {
+					return this.err404(response);
 				}
-				this.err404(response);
+				const [pathinfo, qs] = request.url.split('?');
+				const query = querystring.parse(qs);
+				const [fn, ...args] = pathinfo.split('/').filter(item => item);
+				if (!fn) {
+					return this.noIndex(request, response, pathinfo, query);
+				}
+				const m = router[fn];
+				if (utiljs.isFunction(m)) {
+					// 优先级1 预定义函数
+					return m(request, response, args, query);
+				}
+				// 优先级2 预处理文件 , 优先级3 静态文件
+				const regRouter = route.getRegxpRouter(request.method, pathinfo);
+				if (regRouter) {
+					return regRouter
+						.handler(request, response, regRouter.matches, query, this.root)
+						.then(res => {
+							if (res === false) {
+								this.tryfile(response, pathinfo);
+							}
+						})
+						.catch(e => {
+							const err = e.toString();
+							console.error(e);
+							this.err500(response, err);
+						});
+				}
+				return this.tryfile(response, pathinfo);
+
 			} catch (e) {
 				const err = e.toString();
 				console.error(err);
