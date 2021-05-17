@@ -17,7 +17,7 @@ export default {
 	base64Decode(data) {
 		return Buffer.from(data, 'base64').toString('ascii');
 	},
-	async body(request, max = 65536) {
+	async body(request, max = 1048576) {
 		return await new Promise((resolve, reject) => {
 			let buf = [], count = 0;
 			request

@@ -183,3 +183,8 @@ executablePath
 本地测试 
 
 export headless=0 executablePath='/tmp/chrome-mac/Chromium.app/Contents/MacOS/Chromium' && ./ssr
+
+
+Chromium下载地址
+
+https://download-chromium.appspot.com/

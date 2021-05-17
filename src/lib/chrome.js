@@ -224,6 +224,9 @@ export default {
 				data = await page.pdf(pdfOps);
 				headers['Content-Type'] = 'application/pdf';
 			}
+			if (query.name) {
+				headers['Content-Disposition'] = `attachment; filename* = UTF-8''${encodeURIComponent(query.name)}`;
+			}
 			if (response.headersSent || response.finished) {
 				return
 			}
