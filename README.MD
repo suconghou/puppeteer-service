@@ -125,6 +125,11 @@ POST `/page/evaluate`
 
 `intercept`可配置拦截的资源,以提升页面加载速度
 
+```json
+{
+	"script":"function(){return 1}"
+}
+```
 
 
 ## 其他说明
@@ -168,6 +173,10 @@ docker run --name ssr \
 suconghou/puppeteer:service
 ```
 
+
+```
+docker run --name ssr -d --restart always -e=TZ=CST-8 --log-opt max-size=1m -p 127.0.0.1:9090:9090 -m 800m suconghou/puppeteer:service
+```
 
 
 ```
