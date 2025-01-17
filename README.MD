@@ -119,7 +119,7 @@ POST `/page/evaluate`
 
 大致有两种模式,`capture`和`script`字段至少其一
 
-当capture有效时,会导航到指定url,抓取匹配的请求
+当capture有效时,为capture模式,会导航到指定url,抓取匹配的请求
 
 当`script`有效时,如果url有效,则导航到url,然后执行script.否则,空白页面下执行script
 
@@ -127,9 +127,23 @@ POST `/page/evaluate`
 
 ```json
 {
-	"script":"function(){return 1}"
+	"script":"function(){return {\"agent\":navigator.userAgent}; }"
 }
 ```
+http 返回body： 
+```json
+{
+  "agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/86.0.4240.111 Safari/537.36"
+}
+```
+
+
+```json
+{
+	"script":"function(){return (new Date(1621420182781)).getHours() }"
+}
+```
+http 返回body： 18
 
 
 ## 其他说明
