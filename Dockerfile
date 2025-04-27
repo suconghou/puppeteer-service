@@ -1,6 +1,5 @@
 FROM suconghou/puppeteer:cn
-LABEL maintainer="suconghou@gmail.com"
-RUN wget -O /usr/local/bin/dumb-init https://download.fastgit.org/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64 && \
+RUN wget -O /usr/local/bin/dumb-init https://gh-proxy.com/github.com/Yelp/dumb-init/releases/download/v1.2.5/dumb-init_1.2.5_x86_64 && \
     chmod +x /usr/local/bin/dumb-init && \
     mkdir /app/ && \
     cd /app/ && \

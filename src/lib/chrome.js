@@ -6,8 +6,9 @@ const maxPages = 5;
 
 const launchOps = {
 	headless: (typeof process.env.headless !== 'undefined') ? Boolean(Number(process.env.headless)) : true,
-	args: ['--disable-gpu', '--no-first-run', '--no-zygote', '--no-startup-widnow', '--single-process', '--no-sandbox', '--disable-crash-reporter', '--disable-breakpad', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+	args: ['--disable-gpu', '--disable-accelerated-2d-canvas', '--disable-site-isolation-trials', '--no-first-run', '--no-zygote', '--no-startup-widnow', '--no-sandbox', '--disable-crash-reporter', '--disable-breakpad', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
 	ignoreHTTPSErrors: true,
+	protocolTimeout: 15e3,
 	executablePath: process.env.executablePath ? process.env.executablePath : '/usr/bin/chromium-browser'
 };
 
@@ -112,7 +113,9 @@ class browsers {
 			err = e
 			throw e
 		} finally {
-			await page.goto('about:blank')
+			if (!page.isClosed()) {
+				await page.goto('about:blank')
+			}
 			page.running = false
 			if (!err) {
 				return res
